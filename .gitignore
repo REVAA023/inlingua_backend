@@ -6,3 +6,4 @@ api/__pycache__
 /api/views/__pycache__
 /inlingua_backend/__pycache__
 inlingua_backend/database.py
+deployment.txt
