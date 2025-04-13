@@ -1,0 +1,6 @@
+/Media Uploads
+**/migrations/[0-9][0-9][0-9]*.py
+**/migrations/[0-9][0-9][0-9]*.pyc
+api/migrations/__pycache__
+api/__pycache__
+/api/views/__pycache__
