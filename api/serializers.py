@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import CustomUser, Calendar, StudentDetails
+from api.models import CustomUser, Calendar, StudentDetails, Language, LevelsAndHour
 from django.utils.timezone import localtime
 import base64
 from io import BytesIO
@@ -132,3 +132,19 @@ class CalendarSerializer(serializers.ModelSerializer):
             'update_date',
         ]
         read_only_fields = ['id', 'create_date', 'update_date']
+        
+class LanguagesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = [
+            'name'
+        ]
+
+class LevelsAndHourSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LevelsAndHour
+        fields = [
+            'language',
+            'level',
+            'hours'
+        ]
