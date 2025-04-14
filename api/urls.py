@@ -10,4 +10,6 @@ urlpatterns = [
     
     
     path('login', auth.user_login, name='login'),
+    path('reset_password_link', auth.reset_password_link, name='reset_password_link'),
+    path('change_password', auth.change_password, name='change_password'),
 ]

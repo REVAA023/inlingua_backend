@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.views.decorators.csrf import csrf_exempt
 from api.serializers import StudentDetailsSerializer, CustomUserSerializer
 from api.models import CustomUser, OTP
-from api.views.common import OTPService, send_access_email
+from api.views.common import OTPService, send_password_reset_link
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
@@ -245,161 +245,16 @@ def user_login(request):
         )
 
 @api_view(["POST"])
-def forget_password_otp(request):
-    identifier = request.data.get("identifier")
-    if not identifier:
-        return Response(
-            {"error": "Identifier (email or mobile number) is required."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+def reset_password_link(request):
+    email = request.data.get("email")
     try:
-        # Check if identifier is email
-        int(identifier)
-        is_email = True
-    except :
-        is_email = False
-
-    # Handle Gmail OTP
-    if not is_email:
-        user = CustomUser.objects.filter(email=identifier).first()
-        if user:
-            reset_token = random.randint(100000, 999999)
-            send_mail(
-                subject="Password Reset Request",
-                message=f"Your password reset token is {reset_token}.",
-                from_email="no-reply@example.com",  # Replace with your sender email
-                recipient_list=[user.email],
-            )
-            # Store the reset token in session or temporary storage
-            request.session["reset_token"] = reset_token
-            return Response(
-                {"message": f"A password reset token has been sent to {identifier}."},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"error": "No account associated with this email."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        validate_email(email)
+        user = CustomUser.objects.get(email=email)
+        send_password_reset_link(user)
+        return Response({"success": "Successfully sent password reset link to your email."}, status=status.HTTP_200_OK)
+    except (ValidationError):
+        return Response({"error": "Invalid email"}, status=status.HTTP_404_NOT_FOUND)
     
-    # Handle Mobile Number OTP
-    else:
-        user = CustomUser.objects.filter(mobile_number=identifier).first()
-        if user:
-            otp = random.randint(100000, 999999)
-            # Call the function to send OTP via Twilio or other services
-            # send_otp(identifier, otp)
-            # Store OTP in session or temporary storage
-            request.session["otp"] = otp
-            return Response(
-                {"message": f"A password reset OTP has been sent to {identifier}."},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"error": "No account associated with this mobile number."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-@api_view(["POST"])
-def forget_password_otp_verify(request):
-    identifier = request.data.get("identifier")
-    otp = request.data.get("otp")
-
-    if not identifier or not otp:
-        return Response(
-            {"error": "Identifier (email or mobile number) and OTP are required."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    try:
-        validate_email(identifier)
-        is_email = True
-    except ValidationError:
-        is_email = False
-
-    # Verify Email-based OTP
-    if is_email:
-        user = CustomUser.objects.filter(email=identifier).first()
-        if user and otp == str(request.session.get("reset_token")):
-            return Response(
-                {"message": "OTP verified successfully."},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"error": "Invalid OTP or email."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-    
-    # Verify Mobile Number-based OTP
-    else:
-        user = CustomUser.objects.filter(mobile_number=identifier).first()
-        if user and otp == str(request.session.get("otp")):
-            return Response(
-                {"message": "OTP verified successfully."},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"error": "Invalid OTP or mobile number."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-@api_view(["POST"])
-def change_forget_password(request):
-    identifier = request.data.get("identifier")
-    password = request.data.get("password")
-    confirm_password = request.data.get("confirmPassword")
-
-    if not identifier or not password or not confirm_password:
-        return Response(
-            {"error": "Identifier, password, and confirm password are required."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    if password != confirm_password:
-        return Response(
-            {"error": "Passwords do not match."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    try:
-        validate_email(identifier)
-        is_email = True
-    except ValidationError:
-        is_email = False
-
-    if is_email:
-        user = CustomUser.objects.filter(email=identifier).first()
-        if user:
-            user.set_password(password)
-            user.save()
-            return Response(
-                {"message": "Password reset successfully."},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"error": "No account associated with this email."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-    else:
-        user = CustomUser.objects.filter(mobile_number=identifier).first()
-        if user:
-            user.set_password(password)
-            user.save()
-            return Response(
-                {"message": "Password reset successfully."},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"error": "No account associated with this mobile number."},
-                status=status.HTTP_404_NOT_FOUND,
-            )        
-        
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def change_password(request):
@@ -419,6 +274,9 @@ def change_password(request):
             {"error": "Current password is incorrect."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+        
+    if current_password == new_password :
+        return Response({"error": "New password cannot be the same as the current password."}, status.HTTP_400_BAD_REQUEST)
 
     if new_password != confirm_password:
         return Response(

@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import now
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
+from itsdangerous import URLSafeTimedSerializer
 
 # ✅ Securely retrieve Twilio credentials from environment variables only
 TWILIO_ACCOUNT_SID = "ACa40390c4cf9e7147cd2576f8b47d1dd4"
@@ -80,73 +81,11 @@ class OTPService:
         except Exception as e:
             return {"success": False, "message": f"Failed to send OTP: {str(e)}"}
 
-def generate_activation_url(user):
-    token_data = {
-        "email": user.email,
-        "timestamp": now().timestamp()
-    }
-
-    token = signing.dumps(token_data, salt="activation_salt")
-    url = reverse('activate_account')
-    return f"{settings.FRONTEND_URL}{url}?token={token}"
-
-def send_welcome_email(user):
-    try:
-        subject = "Welcome to LMS"
-        html_message = render_to_string(
-            'welcome_mail.html', {
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-            }
-        )
-        from_email = "no-reply@example.com"
-        recipient_list = [user.email]
-        send_mail(subject, "", from_email, recipient_list, html_message=html_message)
-    except Exception as e:
-        print(f"Error sending welcome email: {str(e)}")
-
-def activate_account(request):
-    token = request.GET.get('token')
-
-    if not token:
-        return HttpResponse('No token provided.', status=400)
-
-    try:
-        token_data = signing.loads(token, salt="activation_salt", max_age=300)
-        email = token_data.get("email")
-
-        if UserToken.objects.filter(token=token).exists():
-            return HttpResponse('This activation link has already been used.', status=400)
-
-        user = CustomUser.objects.get(email=email)
-        user.is_active = True
-        user.is_staff = True
-        user.save()
-        send_welcome_email(user)
-
-        UserToken.objects.create(token=token, email=email)
-
-        return redirect('http://192.168.1.4:8080/admin/')
-
-    except signing.SignatureExpired:
-        return HttpResponse('Activation link has expired.', status=400)
-    except signing.BadSignature:
-        return HttpResponse('Invalid activation link.', status=400)
-    except ObjectDoesNotExist:
-        return HttpResponse('User not found.', status=400)
-
-def send_access_email(user):
-    try:
-        subject = "Access Granted"
-        html_message = render_to_string(
-            'send_access_email.html', {
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'url': generate_activation_url(user),
-            }
-        )
-        from_email = "no-reply@example.com"
-        recipient_list = [user.email]
-        send_mail(subject, "", from_email, recipient_list, html_message=html_message)
-    except Exception as e:
-        print(f"Error sending access email: {str(e)}")
+# Reset password link in mail 
+def send_password_reset_link(user):
+        serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
+        token = serializer.dumps(user.email, salt='password-reset-salt')
+        reset_link = f"http://localhost:4200/reset-password/?token={token}"
+        subject = "Password Reset Request"
+        message = f"Hi {user.first_name} {user.last_name},\n\nClick the link below to reset your password. This link is valid for 5 minutes.\n{reset_link}"    
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
