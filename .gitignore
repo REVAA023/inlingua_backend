@@ -1,0 +1,5 @@
+__pycache__
+*.sqlite3
+/testing
+*/migrations/[0-9][0-9][0-9][0-9]_*.py
+inlingua_backend/database.py

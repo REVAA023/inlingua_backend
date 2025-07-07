@@ -1,0 +1,36 @@
+from django.contrib import admin
+from .models import (
+    CustomUser, 
+    OTP, 
+    UserToken, 
+    Calendar, 
+    Message, 
+    ChatRoom, 
+    Language, 
+    CourseType, 
+    StudentDetails, 
+    Documents, 
+    Counselor,
+    Remark,
+    Lead,
+    History,
+    Trainer,
+    ClassRoom,
+)
+
+admin.site.register(CustomUser)
+admin.site.register(OTP)
+admin.site.register(UserToken)
+admin.site.register(Calendar)
+admin.site.register(Message)
+admin.site.register(ChatRoom)
+admin.site.register(Counselor)
+admin.site.register(Language)
+admin.site.register(CourseType)
+admin.site.register(StudentDetails)
+admin.site.register(Documents)
+admin.site.register(Remark)
+admin.site.register(Lead)
+admin.site.register(History)
+admin.site.register(Trainer)
+admin.site.register(ClassRoom)
