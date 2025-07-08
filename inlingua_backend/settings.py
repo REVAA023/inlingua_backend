@@ -196,3 +196,5 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "revaa.inlingua@gmail.com"
 EMAIL_HOST_PASSWORD = "iazz hxrr ajxe drsd"
 DEFAULT_FROM_EMAIL = "revaa.inlingua@gmail.com"
+
+# hello
