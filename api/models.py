@@ -256,7 +256,7 @@ class StudentDetails(models.Model):
 
 class Trainer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='trainer_profile')
-    trainer_id = models.CharField(max_length=20, default=generate_trainer_id)
+    trainer_id = models.CharField(max_length=20, null=False, blank=False, unique=True, default=generate_trainer_id)
     languages = models.ManyToManyField(Language, related_name='trainers')
     docunets_submited = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)

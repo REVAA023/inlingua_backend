@@ -8,9 +8,8 @@ urlpatterns = [
     path('student-account-verify', students_register.student_account_verify, name='student_account_verify'),
     path('student-details-choices', students_register.student_details, name='student-details-choices'),
     path('student-counselors', students_register.student_counselor, name='student-counselors'),
-    path('get-all-student-details', students.get_all_student_details, name='get-all-student-details'),
-    path('student-profile', students.student_profile, name='student-profile'),
-    path('student-status-update', students.student_status_update, name='student-status-update'),
+    
+    
     path("get-token", auth.get_token, name="get-token"),
     path('login', auth.user_login, name='login'),
     path('reset-password-link', auth.reset_password_link, name='reset_password_link'),
@@ -31,11 +30,15 @@ urlpatterns = [
     
     
     # Students
+    path('get-all-student-details', students.get_all_student_details, name='get-all-student-details'),
     path('student-details', students.student_details, name='student-details'),
+    path('student-profile', students.student_profile, name='student-profile'),
+    path('student-status-update', students.student_status_update, name='student-status-update'),
     
     # Trainers
-    path('get-trainers', trainers.get_trainers, name='get-trainers'),
     path('create-trainer', trainers.create_trainer, name='create-trainer'),
+    path('get-trainers', trainers.get_trainers, name='get-trainers'),
+    path('trainer-profile', trainers.trainer_profile, name='trainer-profile'),
     
     
     

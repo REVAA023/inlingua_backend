@@ -190,10 +190,9 @@ AUTH_USER_MODEL = 'api.CustomUser'
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "mail.revaadigital.com"
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = "test.inlingua@revaadigital.com"
-EMAIL_HOST_PASSWORD = "Hd;C9$@_ZHYF"
-DEFAULT_FROM_EMAIL = "test.inlingua@revaadigital.com"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "revaa.inlingua@gmail.com"
+EMAIL_HOST_PASSWORD = "iazz hxrr ajxe drsd"
+DEFAULT_FROM_EMAIL = "revaa.inlingua@gmail.com"

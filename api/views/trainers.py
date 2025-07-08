@@ -72,3 +72,17 @@ def create_trainer(request):
             return Response({"status": True, "message": "Create trainer Successfully"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"status": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def trainer_profile(request):
+    try:
+        trainer_id = request.data.get("trainerid")
+        print(trainer_id)
+        trainer = Trainer.objects.get(trainer_id=trainer_id)
+        serializer = TrainerDetailsSerializer(trainer)
+        return Response({"status": True, "trainer": serializer.data}, status=status.HTTP_200_OK)
+    except Trainer.DoesNotExist:
+        return Response({"status": False, "message": "Trainer not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"status": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
