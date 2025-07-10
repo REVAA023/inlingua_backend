@@ -30,7 +30,7 @@ def generate_trainer_id():
 class Documents(models.Model):
     document_name = models.TextField()
     document_size = models.TextField()
-    documents_extention = models.CharField(max_length=10)
+    documents_extention = models.CharField(max_length=15)
     document_contant = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
     
@@ -116,6 +116,15 @@ class Language(models.Model):
     def __str__(self):
         return self.name
 
+class CourseType(models.Model):
+    language = models.ForeignKey(Language, on_delete=models.CASCADE)
+    level = models.CharField(max_length=40)
+    context = models.CharField(max_length=10)
+    hours = models.IntegerField()
+
+    def __str__(self):
+        return f" {self.level}"
+    
 class Counselor(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='customUser_created_by')
@@ -126,16 +135,7 @@ class Counselor(models.Model):
     
     def __str__(self):
         return self.user.email
-
-class CourseType(models.Model):
-    language = models.ForeignKey(Language, on_delete=models.CASCADE)
-    level = models.CharField(max_length=40)
-    context = models.CharField(max_length=10)
-    hours = models.IntegerField()
-
-    def __str__(self):
-        return f" {self.level}"
-     
+    
 @receiver(post_migrate)
 def create_level_hour(sender, **kwargs):
     if sender.name == 'api':
@@ -377,7 +377,7 @@ class Message(models.Model):
         return f'{self.sender.first_name}: {self.content[:20]}'
         
 class History(models.Model):
-    user = models.ForeignKey( CustomUser,  on_delete=models.CASCADE,  related_name='history_user' )
+    user = models.ForeignKey( CustomUser, on_delete=models.CASCADE, related_name='history_user' )
     content_type = models.ForeignKey( ContentType, on_delete=models.CASCADE )
     object_id = models.PositiveIntegerField( blank=True, null=True )
     old_content = models.TextField( blank=True, null=True )
@@ -388,4 +388,17 @@ class History(models.Model):
     def __str__(self):
         return f"Change by {self.user} on {self.content_type}: {self.old_content} -> {self.new_content}"
     
-    # Hello
+class StudyMaterial(models.Model):
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name="StudyMaterial_language")
+    language_level = models.ForeignKey(CourseType, on_delete=models.CASCADE, related_name="StudyMaterial_course_type")
+    payment_type = models.CharField( max_length=50, choices=StudentDetails.PAYMENT_TYPE_CHOICES )
+    documents = models.ForeignKey(Documents, on_delete=models.CASCADE, related_name='payment_documents')
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='payment_documents_created_by')
+    created_date = models.DateTimeField(default=timezone.now)
+    updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='payment_documents_updated_by')
+    Updated_date = models.DateTimeField(null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.language} - {self.language_level} - {self.payment_type}"
+    

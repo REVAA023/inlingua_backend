@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import CustomUser, StudentDetails, Language, CourseType, Documents, Counselor, Lead, Remark, Trainer, ClassRoom
+from api.models import CustomUser, StudentDetails, Language, CourseType, Documents, Counselor, Lead, Remark, Trainer, ClassRoom, StudyMaterial
 from django.utils.timezone import localtime, is_naive, make_aware
 from datetime import datetime, date
 
@@ -379,7 +379,7 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
             "courseType": data["course_type"],
             "modeOfClassLabel": instance.get_mode_of_class_display(),
             "modeOfClassValue": instance.mode_of_class,
-            "nameOfCounselor": data["name_of_counselor_data"],  # ✅ Fixed output to show counselor details
+            "nameOfCounselor": data["name_of_counselor_data"],
             "studentStatusLabel": instance.get_student_status_display(),
             "studentStatusValue": instance.student_status,
             "studentTypeLabel": instance.get_student_type_display(),
@@ -402,4 +402,45 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
             "classroom": data["classroom"],
         }
 
+class StudyMaterialSerializer(serializers.ModelSerializer):
+    language = LanguagesSerializer(read_only=True)
+    language_level = CourseTyperSerializer(read_only=True)
+    documents = DocumentSerializer(read_only=True)
+    created_date = CustomDateTimeField()
+    Updated_date = CustomDateTimeField()
+    payment_type_label = serializers.SerializerMethodField()
 
+    class Meta:
+        model = StudyMaterial
+        fields = [
+            'id',
+            'language',
+            'language_level',
+            'payment_type',
+            'payment_type_label',  # ✅ must be included
+            'documents',
+            'created_by',
+            'created_date',
+            'updated_by',
+            'Updated_date',
+            'is_deleted'
+        ]
+
+    def get_payment_type_label(self, obj):
+        return obj.get_payment_type_display()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return {
+            'id': data['id'],
+            'language': data['language'],
+            'languageLevel': data['language_level'],
+            'paymentType': data['payment_type'],
+            'paymentTypeLabel': data['payment_type_label'], 
+            'documents': data['documents'],
+            'createdBy': data['created_by'],
+            'createdDate': data['created_date'],
+            'updatedBy': data['updated_by'],
+            'updatedDate': data['Updated_date'],
+            'isDeleted': data['is_deleted'],
+        }
