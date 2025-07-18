@@ -2,8 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from api.models import Trainer, CustomUser, OTP, Language
-from api.serializers import TrainerDetailsSerializer, LanguagesSerializer
+from api.models import Trainer, CustomUser, OTP, Language, ClassRoom
+from api.serializers import TrainerDetailsSerializer, ClassRoomSerializer
 from api.views.common import send_password_reset_link
 
 @api_view(["GET"])
@@ -78,11 +78,36 @@ def create_trainer(request):
 def trainer_profile(request):
     try:
         trainer_id = request.data.get("trainerid")
-        print(trainer_id)
+        
+        # Check if trainer_id is provided
+        if not trainer_id:
+            return Response(
+                {"status": False, "message": "Trainer ID is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get trainer object
         trainer = Trainer.objects.get(trainer_id=trainer_id)
-        serializer = TrainerDetailsSerializer(trainer)
-        return Response({"status": True, "trainer": serializer.data}, status=status.HTTP_200_OK)
+        trainer_serializer = TrainerDetailsSerializer(trainer)
+        
+        # Get all classrooms associated with this trainer
+        class_rooms = ClassRoom.objects.filter(trainer=trainer)
+        class_room_serializer = ClassRoomSerializer(class_rooms, many=True)
+        
+        return Response({
+            "status": True, 
+            "trainer": trainer_serializer.data, 
+            "class_rooms": class_room_serializer.data
+        }, status=status.HTTP_200_OK)
+        
     except Trainer.DoesNotExist:
-        return Response({"status": False, "message": "Trainer not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "status": False, 
+            "message": "Trainer not found"
+        }, status=status.HTTP_404_NOT_FOUND)
+        
     except Exception as e:
-        return Response({"status": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            "status": False, 
+            "message": f"An error occurred: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

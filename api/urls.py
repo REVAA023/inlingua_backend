@@ -1,5 +1,5 @@
 from django.urls import path
-from api.views import auth, students, students_register, leads, trainers, batch, counselors, study_material
+from api.views import auth, students, students_register, leads, trainers, batch, counselors, study_material, class_record
 
 urlpatterns = [
     path('show-languages', students_register.show_languages, name="show_languages"),
@@ -62,4 +62,9 @@ urlpatterns = [
     # StudyMaterial
     path('get-study-material', study_material.get_study_material, name='get-study-material'),
     path('create-study-material', study_material.create_study_material, name='create-study-material'),
+    
+    # create_class_record
+    path('create-class-record', class_record.create_class_record, name='create-class-record'),
+    path('send-video', class_record.send_video, name='send-video'),
+    
 ]

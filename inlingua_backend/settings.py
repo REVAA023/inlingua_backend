@@ -86,6 +86,8 @@ WSGI_APPLICATION = 'inlingua_backend.wsgi.application'
 
 DATABASES = DATABASES = DATABASES
 
+URL = "http://localhost:4200/"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

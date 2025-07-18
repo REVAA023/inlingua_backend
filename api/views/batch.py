@@ -2,8 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from api.models import StudentDetails, ClassRoom, Trainer, Language, CourseType
-from api.serializers import StudentDetailsSerializer, ClassRoomSerializer, TrainerDetailsSerializer
+from api.models import StudentDetails, ClassRoom, Trainer, Language, CourseType, ClassRecord
+from api.serializers import StudentDetailsSerializer, ClassRoomSerializer, TrainerDetailsSerializer, ClassRecordSerializer
 from api.views.common import send_password_reset_link
 from datetime import datetime
 
@@ -122,6 +122,7 @@ def create_batch(request):
         for student_id in studentList:
             student = StudentDetails.objects.get(pk=student_id)
             student.classroom = new_batch
+            student.student_status = 'BATCH_ALLOCATED'
             student.save()
 
         new_batch.students_list = len(studentList)
@@ -162,13 +163,20 @@ def batch_profile(request):
         # Serialize data
         batch_serializer = ClassRoomSerializer(batch)
         students_serializer = StudentDetailsSerializer(students, many=True)
+        
+        # class records video
+        getVideos =  ClassRecord.objects.filter(
+            class_room = batch
+        )
+        getVideos_serializer = ClassRecordSerializer(getVideos, many=True)
 
         return Response({
             "status": True,
             "batch": batch_serializer.data,
             "students": students_serializer.data,
             "related_trainers": related_trainers_serializer.data,
-            "related_students": related_students_serializer.data
+            "related_students": related_students_serializer.data,
+            "get_videos": getVideos_serializer.data,
         }, status=status.HTTP_200_OK)
 
     except ClassRoom.DoesNotExist:
@@ -198,9 +206,9 @@ def batch_profile_remove_student(request):
         student_id = request.data.get("studentId")
         get_student = StudentDetails.objects.get(id=student_id)
         get_student.classroom = None
+        get_student.student_status = "VERIFYD"
         get_student.save()
         return Response({ "status": True, }, status=status.HTTP_200_OK)
-        
     except Exception as e:
         pass
     
@@ -212,6 +220,7 @@ def batch_profile_add_student(request):
         batch_id = request.data.get("batchId")
         get_student = StudentDetails.objects.get(id=student_id)
         get_student.classroom = ClassRoom.objects.get(id=batch_id)
+        get_student.student_status = "BATCH_ALLOCATED"
         get_student.save()
         
         return Response({ "status": True }, status=status.HTTP_200_OK)

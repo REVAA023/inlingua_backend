@@ -183,8 +183,8 @@ class Lead(models.Model):
     lead_mobile_number = models.CharField(max_length=15, blank=False, null=False, unique=True)
     lead_status = models.CharField(max_length=20, blank=False, null=False, choices=LEAD_STATUS_CHOICES, default='NEW')
     lead_source = models.CharField(max_length=20, blank=False, null=False)
-    lead_remark = models.ForeignKey(Remark, on_delete=models.CASCADE, related_name='lead_remark', blank=True, null=True)
-    counselor_remark = models.ForeignKey(Remark, on_delete=models.CASCADE, related_name='counselor_remark', blank=True, null=True)
+    lead_remark = models.TextField(blank=True, null=True)
+    counselor_remark = models.TextField(blank=True, null=True)
     callback_date = models.DateTimeField(blank=True, null=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='leads_created')
     created_date = models.DateTimeField(default=timezone.now, blank=False, null=False)
@@ -235,6 +235,9 @@ class StudentDetails(models.Model):
     student_status = models.CharField(choices=STATUS_CHOICES, max_length=25, default='NEW_STUDENT')
     student_type = models.CharField(choices=STUDENTS_TYPE_CHOICES, max_length=25, default='A')
     classroom = models.ForeignKey('ClassRoom', on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
+    
+    class_video_record = models.ForeignKey('ClassRecord', on_delete=models.SET_NULL, null=True, blank=True, related_name='class_video_record')
+    class_video_record_expiry = models.DateTimeField(null=True, blank=True)
 
     payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPE_CHOICES, default='FULL')
     transaction_id = models.CharField(max_length=20, unique=True)
@@ -258,6 +261,7 @@ class Trainer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='trainer_profile')
     trainer_id = models.CharField(max_length=20, null=False, blank=False, unique=True, default=generate_trainer_id)
     languages = models.ManyToManyField(Language, related_name='trainers')
+    classRoom = models.ManyToManyField('ClassRoom', related_name='trainer_classrooms', blank=True)
     docunets_submited = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     is_verify = models.BooleanField(default=False)
@@ -401,4 +405,14 @@ class StudyMaterial(models.Model):
     
     def __str__(self):
         return f"{self.language} - {self.language_level} - {self.payment_type}"
+
+class ClassRecord(models.Model):
+    class_room = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='class_record')
+    document = models.ForeignKey(Documents, on_delete=models.SET_NULL, null=True, blank=True, related_name='class_record_documents')
+    attendance = models.ManyToManyField(StudentDetails, related_name='attendance_records', blank=True)
+    notes = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='class_record_created_by')
+    created_date = models.DateTimeField(default=timezone.now)
     
+    def __str__(self):
+        return f"Class Record for {self.class_room.name} on {self.created_date}"

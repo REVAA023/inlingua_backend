@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import CustomUser, StudentDetails, Language, CourseType, Documents, Counselor, Lead, Remark, Trainer, ClassRoom, StudyMaterial
+from api.models import CustomUser, StudentDetails, Language, CourseType, Documents, Counselor, Lead, Remark, Trainer, ClassRoom, StudyMaterial, ClassRecord
 from django.utils.timezone import localtime, is_naive, make_aware
 from datetime import datetime, date
 
@@ -121,13 +121,6 @@ class CourseTyperSerializer(serializers.ModelSerializer):
             'context'
         ]
            
-# class CustomDateTimeField(serializers.DateTimeField):
-#     def to_representation(self, value):
-#         if not value:
-#             return None
-#         ist_time = localtime(value)
-#         return ist_time.strftime("%d %b %Y")
-
 class RemarkSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer(read_only=True)
     created_date = CustomDateTimeField()
@@ -162,7 +155,6 @@ class LeadsDetailsSerializer(serializers.ModelSerializer):
     lead_photo = DocumentSerializer()
     created_by = CustomUserSerializer(read_only=True)
     updated_by = CustomUserSerializer(read_only=True)
-    lead_remark = RemarkSerializer(read_only=True)
 
     class Meta:
         model = Lead
@@ -223,6 +215,7 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             "user",
             "trainer_id",
             "languages", 
+            "classRoom",
             "languages_data",
             "docunets_submited",
             "is_deleted",
@@ -233,7 +226,6 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             # "Updated_date"
         ]
 
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         return {
@@ -241,6 +233,7 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             "user": data["user"],
             "trainerId": data["trainer_id"],
             "languagesData": data["languages_data"],
+            "classRoom": data["classRoom"],
             "docunetsSubmited": data["docunets_submited"],
             "isDeleted": data["is_deleted"],
             "isVerify": data["is_verify"],
@@ -249,7 +242,6 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             "updatedBy": data["updated_by"],
             # "UpdatedDate": data["Updated_date"],
         }
-
 
 class ClassRoomSerializer(serializers.ModelSerializer):
     language = LanguagesSerializer(read_only=True)
@@ -320,6 +312,59 @@ class ClassRoomSerializer(serializers.ModelSerializer):
             "updatedBy":     data["updated_by"],
             "updatedDate":   data["updated_date"],
         }
+
+# Simple serializer for student attendance without circular reference
+class StudentAttendanceSerializer(serializers.ModelSerializer):
+    user = CustomUserSerializer(read_only=True)
+    
+    class Meta:
+        model = StudentDetails
+        fields = [
+            'id',
+            'user',
+            'student_id',
+            'student_status'
+        ]
+        
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return {
+            "id": data["id"],
+            "user": data["user"],
+            "studentId": data["student_id"],
+            "studentStatus": data["student_status"],
+        }
+
+class ClassRecordSerializer(serializers.ModelSerializer):
+    class_room = ClassRoomSerializer(read_only=True)
+    document = DocumentSerializer(read_only=True)
+    attendance = StudentAttendanceSerializer(many=True, read_only=True)
+    created_by = CustomUserSerializer(read_only=True)
+    created_date = CustomDateTimeField()
+
+    class Meta:
+        model = ClassRecord
+        fields = [
+            'id',
+            'class_room',
+            'document',
+            'attendance',
+            'notes',
+            'created_by',
+            'created_date'
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return {
+            'id': data['id'],
+            'classRoom': data['class_room'],
+            'document': data['document'],
+            'attendance': data['attendance'],
+            'notes': data['notes'],
+            'createdBy': data['created_by'],
+            'createdDate': data['created_date']
+        }
         
 class StudentDetailsSerializer(serializers.ModelSerializer):
     created_date = CustomDateTimeField()
@@ -329,6 +374,7 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
     aadhar = DocumentSerializer(read_only=True)
     language = LanguagesSerializer(read_only=True)
     classroom = ClassRoomSerializer(read_only=True)
+    class_video_record = ClassRecordSerializer(read_only=True)
     course_type = CourseTyperSerializer(read_only=True)
     payment_conform_screenshot = DocumentSerializer(read_only=True)
     name_of_counselor = serializers.PrimaryKeyRelatedField(
@@ -336,7 +382,6 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
         write_only=True
     )
     name_of_counselor_data = CounselorSerializer(source='name_of_counselor', read_only=True)
-
 
     class Meta:
         model = StudentDetails
@@ -361,9 +406,14 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
             "updated_by",
             "Updated_date",
             "is_deleted",
-            
             "professions",
-            "classroom"
+            "mode_of_class",
+            "student_status",
+            "student_type",
+            "payment_type",
+            "classroom",
+            "class_video_record",
+            "class_video_record_expiry"
         ]
 
     def to_representation(self, instance):
@@ -400,6 +450,8 @@ class StudentDetailsSerializer(serializers.ModelSerializer):
             "isDeleted": data["is_deleted"],
             "professions": data["professions"],
             "classroom": data["classroom"],
+            "classVideoRecord": data["class_video_record"],
+            "classVideoRecordExpiry": data["class_video_record_expiry"],
         }
 
 class StudyMaterialSerializer(serializers.ModelSerializer):
@@ -417,7 +469,7 @@ class StudyMaterialSerializer(serializers.ModelSerializer):
             'language',
             'language_level',
             'payment_type',
-            'payment_type_label',  # ✅ must be included
+            'payment_type_label',
             'documents',
             'created_by',
             'created_date',

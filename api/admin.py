@@ -16,7 +16,8 @@ from .models import (
     History,
     Trainer,
     ClassRoom,
-    StudyMaterial
+    StudyMaterial,
+    ClassRecord
 )
 
 admin.site.register(CustomUser)
@@ -36,3 +37,4 @@ admin.site.register(History)
 admin.site.register(Trainer)
 admin.site.register(ClassRoom)
 admin.site.register(StudyMaterial)
+admin.site.register(ClassRecord)

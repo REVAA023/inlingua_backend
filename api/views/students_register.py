@@ -7,7 +7,7 @@ from rest_framework import status
 from api.models import OTP, CustomUser, Language, CourseType, StudentDetails,Counselor, History, ClassRoom
 from api.serializers import DocumentSerializer, LanguagesSerializer, CourseTyperSerializer, StudentDetailsSerializer
 from django.views.decorators.csrf import csrf_exempt
-from api.views.common import OTPService
+from api.views.common import OTPService, send_students_register_mail
 from django.contrib.contenttypes.models import ContentType
 
 # Forms
@@ -218,7 +218,10 @@ def student_account_verify(request):
             iaggry=is_aggry,
             created_by=user
         )
-
+        
+        # Send mail for accound creation success and send study material link
+        send_students_register_mail(student)
+        
         History.objects.create(
             user=user,
             content_type=ContentType.objects.get_for_model(StudentDetails),
