@@ -84,19 +84,19 @@ def student_counselor(request):
 @csrf_exempt
 @api_view(["POST"])
 def otp_sender(request):
-    email = request.data.get("gmail")
-
+    mobile_number = request.data.get("MobileNumber") 
+    email = request.data.get("gmail") 
     
     otp_service = OTPService()
-    # otp_response = otp_service.send_otp(mobile_number)
-    # email_responce = otp_service.send_email_otp(email)
+    otp_response = otp_service.send_otp(mobile_number)
+    email_responce = otp_service.send_email_otp(email)
 
     # if not otp_response.get("success"):
     #     return Response(
     #         {"message": "Failed to send Mobile OTP."},
     #         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
     #     )
-    # if not email_responce.get("success"):
+    # if not email_responce["status"]:
     #     return Response(
     #         {"message": "Failed to send Gmail OTP."},
     #         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -118,6 +118,14 @@ def student_account_verify(request):
         return Response({"message": "Parsed student data missing."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        #Gmail OTP Validation
+        gmail_otp_obj = OTP.objects.filter(mobile_number=gmailotp).first()
+        if not gmail_otp_obj or str(gmail_otp_obj.otp) != str(gmailotp):
+            return Response({"message": "Invalid OTP for Gmail."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Mobile Number OTP Validation
+        
+        
         email = data.get("gmail")
         first_name = data.get("FirstName")
         last_name = data.get("LastName")
@@ -150,10 +158,6 @@ def student_account_verify(request):
             return Response({"message": "A user with this email already exists."}, status=status.HTTP_400_BAD_REQUEST)
         if CustomUser.objects.filter(mobile_number=mobile_number).exclude(email=email).exists():
             return Response({"message": "A user with this mobile number already exists."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # gmail_otp_obj = OTP.objects.filter(mobile_number=email).first()
-        # if not gmail_otp_obj or str(gmail_otp_obj.otp) != str(gmailotp):
-        #     return Response({"message": "Invalid OTP for Gmail."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Save documents
         # Updated save_document with better validation
@@ -220,7 +224,8 @@ def student_account_verify(request):
         )
         
         # Send mail for accound creation success and send study material link
-        send_students_register_mail(student)
+        result = send_students_register_mail(student)
+        print(result)
         
         History.objects.create(
             user=user,
@@ -235,4 +240,4 @@ def student_account_verify(request):
         return Response({'message': 'User verified and student record created successfully.'}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        return Response({"message": f" {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"message": f"{str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
