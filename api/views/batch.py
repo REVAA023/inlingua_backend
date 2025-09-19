@@ -6,6 +6,10 @@ from api.models import StudentDetails, ClassRoom, Trainer, Language, CourseType,
 from api.serializers import StudentDetailsSerializer, ClassRoomSerializer, TrainerDetailsSerializer, ClassRecordSerializer
 from api.views.common import send_password_reset_link
 from datetime import datetime
+from django.shortcuts import get_object_or_404
+from channels.layers import get_channel_layer
+import json
+from asgiref.sync import async_to_sync
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -259,34 +263,21 @@ def batch_complited_update(request):
         
     except Exception as e:
         pass
-    
+
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])    
+@permission_classes([IsAuthenticated])
 def start_class(request):
-    try:
-        batchId = request.data.get("batchId")
-        
-        classroom = ClassRoom.objects.get(id=batchId)
-        classroom.is_active = True
-        classroom.save()
-        
-        return Response({ "status": True, }, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        pass
-    
+    batch_id = request.data.get("batchId")
+    classroom = get_object_or_404(ClassRoom, id=batch_id)
+    classroom.is_active = True
+    classroom.save()  # Signal fires automatically
+    return Response({"status": True}, status=status.HTTP_200_OK)
+
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])    
+@permission_classes([IsAuthenticated])
 def end_class(request):
-    try:
-        batchId = request.data.get("batchId")
-        
-        classroom = ClassRoom.objects.get(id=batchId)
-        classroom.is_active = False
-        classroom.save()
-        
-        return Response({ "status": True, }, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        pass
-    
+    batch_id = request.data.get("batchId")
+    classroom = get_object_or_404(ClassRoom, id=batch_id)
+    classroom.is_active = False
+    classroom.save()  # Signal fires automatically
+    return Response({"status": True}, status=status.HTTP_200_OK)

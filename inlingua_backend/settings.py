@@ -35,12 +35,16 @@ ALLOWED_HOSTS = ['*']
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 INSTALLED_APPS = [
+    'daphne',  # Keep this first for ASGI support
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Add channels for WebSocket support
+    'channels',
     
     'api',
     'rest_framework',
@@ -51,13 +55,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Move CORS middleware to the top
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'inlingua_backend.urls'
@@ -84,7 +88,7 @@ WSGI_APPLICATION = 'inlingua_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = DATABASES = DATABASES
+DATABASES = DATABASES
 
 URL = "http://localhost:4200/"
 
@@ -136,10 +140,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 FRONTEND_URL = 'http://192.168.1.4:8080'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-]
-
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = [
@@ -150,15 +150,34 @@ CORS_ALLOW_METHODS = [
     "OPTIONS",
 ]
 
-CORS_ALLOW_HEADERS = [
-    "content-type",
-    "authorization",
-]
-
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'ngrok-skip-browser-warning',
     "Authorization",
     "spinner",
+    "content-type",
+    "authorization",
+]
+
+# WebSocket CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://192.168.1.4:8080",
+]
+
+# Allow WebSocket connections from these origins
+CORS_ALLOW_WEBSOCKET_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://192.168.1.4:8080",
+    "https://localhost:4200",  # Add HTTPS versions if needed
+    "https://127.0.0.1:4200",
+]
+
+ALLOWED_WEBSOCKET_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200", 
+    "http://192.168.1.4:8080",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -198,3 +217,37 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "revaa.inlingua@gmail.com"
 EMAIL_HOST_PASSWORD = "iazz hxrr ajxe drsd"
 DEFAULT_FROM_EMAIL = "revaa.inlingua@gmail.com"
+
+
+"""
+-----------------------------------WEB SOCKET SETTINGS -----------------------------------
+"""
+
+ASGI_APPLICATION = "inlingua_backend.asgi.application"
+
+# For development, use InMemoryChannelLayer (Redis not required)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'api.consumers': {  # Adjust based on your app name
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'channels': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}

@@ -17,7 +17,10 @@ from .models import (
     Trainer,
     ClassRoom,
     StudyMaterial,
-    ClassRecord
+    ClassRecord,
+    Participants,
+    Room,
+    ChatMessage
 )
 
 admin.site.register(CustomUser)
@@ -38,3 +41,6 @@ admin.site.register(Trainer)
 admin.site.register(ClassRoom)
 admin.site.register(StudyMaterial)
 admin.site.register(ClassRecord)
+admin.site.register(Participants)
+admin.site.register(Room)
+admin.site.register(ChatMessage)

@@ -460,3 +460,30 @@ class ClassRecord(models.Model):
     
     def __str__(self):
         return f"Class Record for {self.class_room.name} on {self.created_date}"
+    
+class Participants(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='participants_user')
+    isVideoOff = models.BooleanField(default=False)
+    isAudioOff = models.BooleanField(default=False)
+    isHandRaised = models.BooleanField(default=False)
+    isChatEnabled = models.BooleanField(default=True)
+    isScreenShareEnabled = models.BooleanField(default=False)  
+    
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}"
+    
+class Room(models.Model):
+    room_name = models.CharField(max_length=100, unique=True)
+    room_participants = models.ManyToManyField(Participants, related_name='room_participants', blank=True)
+
+    def __str__(self):
+        return self.room_name
+    
+class ChatMessage(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='chat_messages')
+    sender = models.ForeignKey(Participants, on_delete=models.CASCADE, related_name='chat_messages_sender')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender.user.first_name}"
